@@ -92,16 +92,14 @@ junit 'results.xml'
 | GitLab Code Quality | --output gitlab | GitLab MR widget |
 | GitHub Annotations | --output github | GitHub PR inline |
 
-## Publishing to PyPI
+## Contributing
 
 ```bash
-pip install build twine
-python -m build
-twine upload --repository testpypi dist/*   # Test first
-twine upload dist/*                         # Production
+git clone https://github.com/c0denician88/anoman-codecheck
+cd anoman-codecheck
+pip install -e ".[dev]"
+pytest tests/ -v
 ```
-
-Or use GitHub Actions trusted publishing - see .github/workflows/publish.yml
 
 ## License
 
