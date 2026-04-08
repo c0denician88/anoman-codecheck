@@ -18,6 +18,61 @@ anoman-codecheck scan ./my-project
 
 ---
 
+## Why Anoman CodeCheck?
+
+Traditional SAST tools and manual code reviews each solve part of the problem — but neither solves it completely. Anoman CodeCheck combines the depth of a senior security engineer's review with the speed and consistency of automation.
+
+### The Problem
+
+| Challenge | Traditional SAST | Manual Code Review |
+|-----------|------------------|--------------------|
+| Setup time | Hours to days (rules, exclusions, tuning) | Zero tooling, but needs scheduling |
+| False positives | **High** — pattern matching triggers on safe code | Low — human judgment filters noise |
+| Business logic flaws | Misses entirely — can't understand intent | **Catches** — human reads context |
+| Novel vulnerabilities | Only finds known patterns | Can reason about new attack vectors |
+| Compliance mapping | Basic (CWE only) | Depends on reviewer's knowledge |
+| Supply chain risks | Separate tool (Snyk, Dependabot) | Usually skipped |
+| Speed at scale | Fast on large codebases | **Bottleneck** — days/weeks for large reviews |
+| Consistency | Deterministic but rigid | Varies by reviewer skill and fatigue |
+| CI/CD integration | Good (SARIF, JUnit) | Manual gate — blocks pipelines |
+| Cost | $50–500+/month per repo | $150–300/hour for specialist reviewers |
+| Data residency | Data sent to US/EU vendor cloud | In-house only |
+
+### How Anoman CodeCheck Is Different
+
+Anoman CodeCheck uses **Claude Opus** (one of the most capable reasoning models) to perform code review the way a senior security engineer would — reading the code, understanding business logic, tracing data flows, and reasoning about attack surfaces — but in **minutes instead of days**.
+
+**What you get:**
+
+- **Understands context, not just patterns.** An LLM reads your code like a human reviewer. It catches business logic flaws, insecure design patterns, and subtle vulnerabilities that regex-based SAST tools miss entirely.
+- **Zero configuration.** Point it at a directory and scan. No rules to write, no exclusions to tune, no training data to maintain. The AI already knows what to look for.
+- **Framework-aware compliance.** Every finding maps to a specific OWASP, NIST SP 800-53, ISO 27001, or CWE control ID. Your auditors get structured evidence, not a wall of text.
+- **Live CVE + supply chain in one pass.** Dependencies are checked against the OSV.dev database in real-time during every scan. No separate SCA tool needed.
+- **Sovereign data routing.** Choose where your code is processed: Singapore (PDPA compliant), Jakarta (UU PDP compliant), or US. Your source code never leaves the region you select.
+- **CI/CD native.** Drop it into GitHub Actions, GitLab CI, or Jenkins with one command. SARIF for GitHub Code Scanning, JUnit XML for Jenkins, GitLab Code Quality for MR widgets. Exit code 1 blocks the pipeline on critical/high findings.
+- **One dependency.** The entire tool is `httpx` + Python 3.9+. No JVM, no Docker, no binary downloads.
+
+### Side-by-Side Comparison
+
+| Capability | Anoman CodeCheck | SonarQube / Semgrep | Manual Review |
+|------------|-----------------|---------------------|---------------|
+| Business logic analysis | Yes (LLM reasoning) | No | Yes |
+| Credential leak detection | Yes | Partial (regex) | Yes |
+| OWASP/NIST/ISO mapping | 45+ checks, auto-mapped | CWE only | Manual |
+| Custom checklists | JSON export/import | YAML rules (complex) | N/A |
+| CVE/dependency scanning | Built-in (OSV.dev live) | Separate tool | Usually skipped |
+| Data residency control | SG / ID / US selectable | Vendor cloud only | In-house |
+| Setup time | 30 seconds | Hours to days | N/A |
+| False positive rate | Low (contextual reasoning) | Medium-High | Low |
+| Cost | Per-scan token cost | $150-450/mo per project | $150-300/hr |
+| CI/CD output formats | SARIF, JUnit, GitLab, GitHub | SARIF, JSON | None |
+| Offline/air-gap mode | No (needs API) | Yes (self-hosted) | Yes |
+| Deterministic results | No (LLM variance) | Yes | No |
+
+> **When to use SAST instead:** If you need deterministic, reproducible results for audit evidence, or you're scanning 500+ files per run in a CI pipeline that runs 50x/day, traditional SAST is more cost-effective for high-frequency scans. Anoman CodeCheck is best for **deep scans** — pre-merge reviews, security audits, compliance checks, and catching what SAST misses.
+
+---
+
 ## Setup Guide
 
 ### Step 1: Get an Anoman AI Account
@@ -133,14 +188,37 @@ pip install httpx && \
 
 ## Features
 
-- **AI SAST** - Claude Opus analyzes for security vulns, credential leaks, quality issues
-- **Pre-built Checklists** - OWASP API/Web Top 10, NIST SP 800-53, ISO 27001, Infra, Mobile (45+ checks)
-- **Custom Checklists** - Export, edit, and use your own JSON checklists
-- **Live CVE Lookup** - Queries OSV.dev on every scan for latest vulnerabilities
-- **Supply Chain Scan** - Parses requirements.txt, package.json, pyproject.toml, go.mod
-- **CI/CD Output** - SARIF, JUnit XML, GitLab Code Quality, GitHub annotations
-- **CI Gating** - Exit code 1 on critical/high findings
-- **Sovereign Routing** - Data stays in Singapore (PDPA) or Jakarta (UU PDP)
+### AI-Powered Code Analysis
+- **Claude Opus reasoning** — not regex matching. The LLM reads your code, traces data flows, understands business logic, and identifies vulnerabilities that pattern-based scanners miss.
+- **30+ language support** — Python, JavaScript/TypeScript, Java, Go, Rust, Ruby, PHP, C/C++, Swift, Kotlin, Scala, SQL, Shell, Terraform, Dockerfiles, YAML/JSON/TOML configs.
+- **Structured findings** — every issue includes severity (CRITICAL/HIGH/MEDIUM/LOW/INFO), exact file + line, description, fix recommendation, and mapped framework control ID.
+
+### Compliance Checklists (45+ Checks)
+- **OWASP API Security Top 10 (2023)** — Broken Object-Level Auth, Broken Authentication, Injection, SSRF, Mass Assignment, and more.
+- **OWASP Web Top 10 (2021)** — Broken Access Control, Cryptographic Failures, Injection, Insecure Design, Security Misconfiguration, and more.
+- **NIST SP 800-53 Rev 5** — Access Control, Audit & Accountability, System & Communications Protection, Incident Response.
+- **ISO 27001:2022 Annex A** — Access Management, Cryptography, Operations Security, Communications Security.
+- **Infrastructure** — Docker misconfigurations, Terraform security, secrets in IaC, exposed ports, privilege escalation.
+- **Mobile (OWASP MASVS 2.0)** — Insecure data storage, weak auth, insufficient crypto, code tampering, reverse engineering.
+- **Custom checklists** — Export any checklist to JSON, edit it, add your own checks, and scan with `--custom-checklist`.
+
+### Live CVE & Supply Chain Scanning
+- **OSV.dev integration** — queries the Open Source Vulnerability database on every scan. No stale advisory data.
+- **Dependency file parsing** — automatically detects and parses `requirements.txt`, `package.json`, `pyproject.toml`, `go.mod`, `Gemfile.lock`.
+- **CVE findings merged into report** — supply chain vulnerabilities appear alongside code findings with fix versions and advisory URLs.
+
+### CI/CD Integration
+- **SARIF 2.1.0** — GitHub Code Scanning, Azure DevOps, VS Code SARIF Viewer.
+- **JUnit XML** — Jenkins, GitLab, CircleCI, any JUnit-compatible runner.
+- **GitLab Code Quality** — native MR widget integration.
+- **GitHub Annotations** — inline PR comments (auto-detected in GitHub Actions).
+- **CI gating** — `--fail-on critical|high|medium` exits with code 1 to block the pipeline.
+
+### Sovereign Data Routing
+- **Singapore** — code processed in AWS ap-southeast-1, PDPA compliant.
+- **Jakarta** — code processed in AWS ap-southeast-3, UU PDP compliant.
+- **US** — standard routing, lowest latency for non-regulated workloads.
+- **Your code stays in the region you choose.** No cross-border data transfer.
 
 ## Usage
 
