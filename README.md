@@ -16,6 +16,121 @@ export ANOMAN_API_KEY="anm-sk-your-key-here"
 anoman-codecheck scan ./my-project
 ```
 
+---
+
+## Setup Guide
+
+### Step 1: Get an Anoman AI Account
+
+1. Go to [https://app.anoman.io](https://app.anoman.io)
+2. Click **"Create Account"**
+3. Sign up with **Google**, **GitHub**, or **email + password**
+4. Verify your email (check inbox for verification link)
+
+### Step 2: Create an API Key
+
+1. After signing in, go to **API Keys** in the sidebar
+2. Click **"Create Key"**
+3. Fill in:
+   - **Name**: e.g. `codecheck-scanner`
+   - **Tier**: `Team` or higher (for Bedrock sovereign access)
+   - **Region**: `sg` (Singapore) or `id` (Indonesia)
+   - **Region Preference** (optional):
+     - `any` — route to any provider (fastest)
+     - `sg_only` — data stays in Singapore (PDPA compliant)
+     - `id_only` — data stays in Jakarta (UU PDP compliant)
+4. Click **Create** and **copy the key** (shown only once)
+5. The key looks like: `anm-sk-abc123...`
+
+### Step 3: Configure
+
+Set the API key as an environment variable:
+
+```bash
+# Linux / macOS
+export ANOMAN_API_KEY="anm-sk-your-key-here"
+
+# Windows (PowerShell)
+$env:ANOMAN_API_KEY = "anm-sk-your-key-here"
+
+# Windows (CMD)
+set ANOMAN_API_KEY=anm-sk-your-key-here
+```
+
+Or pass it directly:
+
+```bash
+anoman-codecheck scan ./my-project --api-key "anm-sk-your-key-here"
+```
+
+### Choosing a Model and Region
+
+The `--model` flag controls which AI model scans your code and **where your data is processed**:
+
+| Model | AI Engine | Data Location | Compliance | Best For |
+|-------|-----------|--------------|------------|---------|
+| `claude-opus-bedrock-sg` | Claude Opus 4.6 | **Singapore** | PDPA | **Recommended** — most thorough, sovereign SG |
+| `claude-opus-bedrock-id` | Claude Opus 4.6 | **Jakarta** | UU PDP | Indonesian data residency |
+| `claude-sonnet-bedrock-sg` | Claude Sonnet 4.6 | **Singapore** | PDPA | Faster, cheaper, good accuracy |
+| `claude-haiku-bedrock-sg` | Claude Haiku 4.5 | **Singapore** | PDPA | Fastest, cheapest, quick scans |
+| `claude-sonnet-bedrock-id` | Claude Sonnet 4.6 | **Jakarta** | UU PDP | Fast + Indonesian residency |
+| `claude-opus` | Claude Opus 4.6 | US (Virginia) | None | No data residency requirement |
+| `claude-sonnet` | Claude Sonnet 4.6 | US (Virginia) | None | Fast, no residency requirement |
+
+```bash
+# Sovereign scan — data stays in Singapore
+anoman-codecheck scan ./my-project --model claude-opus-bedrock-sg
+
+# Sovereign scan — data stays in Jakarta
+anoman-codecheck scan ./my-project --model claude-opus-bedrock-id
+
+# Fast scan — less thorough but 5x faster
+anoman-codecheck scan ./my-project --model claude-haiku-bedrock-sg
+
+# US processing — cheapest, no data residency
+anoman-codecheck scan ./my-project --model claude-sonnet
+```
+
+---
+
+## Run Without Installing (from source)
+
+No pip install needed — clone and run directly:
+
+```bash
+# Clone the repo
+git clone https://github.com/c0denician88/anoman-codecheck
+cd anoman-codecheck
+
+# Install only the dependency (httpx)
+pip install httpx
+
+# Set your API key
+export ANOMAN_API_KEY="anm-sk-your-key-here"
+
+# Run directly with Python
+python -m anoman_codecheck scan /path/to/your/project
+
+# Or run the scanner module directly
+python anoman_codecheck/scanner.py scan /path/to/your/project
+
+# All flags work the same way
+python -m anoman_codecheck scan ./my-project --type api --model claude-opus-bedrock-sg
+python -m anoman_codecheck checklists
+python -m anoman_codecheck checklist owasp-api --export
+```
+
+### One-liner (no clone needed)
+
+```bash
+# Download and run in one command
+pip install httpx && \
+  git clone https://github.com/c0denician88/anoman-codecheck /tmp/codecheck && \
+  ANOMAN_API_KEY="anm-sk-..." python -m /tmp/codecheck/anoman_codecheck scan ./my-project
+```
+
+---
+
 ## Features
 
 - **AI SAST** - Claude Opus analyzes for security vulns, credential leaks, quality issues
